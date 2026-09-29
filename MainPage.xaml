@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="UniversityScheduleApp.MainPage"
+             BackgroundColor="#72b88e">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="10,0"
+            Spacing="10">
+
+            <!-- Таймер -->
+            <Label
+                x:Name="Timer"
+                Text="12:00:00"
+                FontSize="70"
+                FontAttributes="Bold"
+                HorizontalOptions="Center"
+            />
+            <!-- Дата и Чётность недели -->
+            <Label
+                x:Name="dateAndEven"
+                Text="26.09.2026 НЕЧЕТ"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                FontSize="35"
+            >
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="InvertWeek"/>
+                </Label.GestureRecognizers>
+            </Label>
+            <!-- Выбор недели с кнопочками -->
+            <Grid
+                ColumnDefinitions="Auto, *, Auto"
+                >
+                
+                <Button
+                    Clicked="PreviousDay"
+                    Grid.Column="0"
+                    CornerRadius="8"
+                    Text="⬅"
+                    FontSize="35"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#276b4c"
+                />
+                <Label
+                    x:Name="weekDayLabel"
+                    FontAttributes="Bold"
+                    Text="Понедельник"
+                    FontSize="29"
+                    Grid.Column="1"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                />
+                <Button
+                    Clicked="NextDay"
+                    Grid.Column="2"
+                    CornerRadius="8"
+                    Text="⮕"
+                    FontSize="35"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#276b4c"
+                />
+            </Grid>
+
+            <!-- Расписание -->
+            <CollectionView x:Name="ScheduleCollectionView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <VerticalStackLayout>
+                            <Grid ColumnDefinitions="Auto, *" BackgroundColor="#276b4c">
+                                <Label
+                                    
+                                    Grid.Column="0"
+                                    Text="{Binding eventNumber}"
+                                    FontSize="25"
+                                    HorizontalOptions="Start"
+                                    VerticalOptions="Center"
+                                />
+                                <Label
+                                    
+                                    Grid.Column="1"
+                                    Text="{Binding StartEndTime}"
+                                    FontSize="25"
+                                    HorizontalOptions="End"
+                                    VerticalOptions="Center"
+                                />
+                            </Grid>
+                            <Grid ColumnDefinitions="*, Auto" BackgroundColor="#cae0d6" >
+                                <Label
+                                    FontAttributes="Bold"
+                                    TextColor="#271b10"
+                                    Grid.Column="0"
+                                    Text="{Binding eventName}"
+                                    FontSize="25"
+                                    HorizontalOptions="Start"
+                                    VerticalOptions="Center"
+                                />
+                                <Label
+                                    TextColor="#271b10"
+                                    Grid.Column="1"
+                                    Text="{Binding eventRoom}"
+                                    FontSize="30"
+                                    HorizontalOptions="End"
+                                    VerticalOptions="Center"
+                                />
+                            </Grid>
+                            <Label
+                                FontAttributes="Italic"
+                                TextColor="#271b10"
+                                Text="{Binding eventType}"
+                                FontSize="20"
+                                HorizontalOptions="Fill"
+                                BackgroundColor="#cae0d6"
+                                VerticalOptions="Center"
+                            />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            
+            <!-- Доп инфа (Пока что лейбл отсутствует) -->
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
