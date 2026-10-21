@@ -1,15 +1,23 @@
-﻿using UniversityScheduleApp.CodeFiles;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.WebSockets;
+using UniversityScheduleApp.CodeFiles;
 
 namespace UniversityScheduleApp;
 
 public partial class MainPage : ContentPage
 {
    
-    // Пустое расписание       
+    // Список Расписание выбранного дня       
     List<Event> events = new List<Event>();
 
+    // Список Полное расписание выбранной группы 
+    List<Lesson> groupSchedule = new List<Lesson>();
+
+    // БД с расписанием
+    private DatabaseService databaseService;
+
+
+    int weekDay;
     bool invertWeek = false; // Переключение Чётности недели
 
     // Сегодняшний День Недели
@@ -39,92 +47,20 @@ public partial class MainPage : ContentPage
         { 8, (new TimeOnly(20, 25), new TimeOnly(22, 00)) },
     };
 
-    // Расписание, пока харкод, потом будет SQL, а потом может быть и парсинг с сайта
 
-    // Нечётная неделя
-    List<Lesson> mondayNotEven = new List<Lesson>()
-    {
-        new Lesson(2, "Математический Анализ", "Практика", "А314"),
-        new Lesson(3, "Информатика", "Лабораторная", "409"),
-    };
-    List<Lesson> tuesdayNotEven = new List<Lesson>()
-    {
-        new Lesson(2, "Программирование", "Лекция", "302"),
-        new Lesson(3, "Матан", "Лекция", "Б402"),
-        new Lesson(4, "Алгем", "Практика", "А318"),
-    };
-    List<Lesson> wednesdayNotEven = new List<Lesson>()
-    {
-        new Lesson(1, "Программирование", "Лабораторная", "425"),
-        new Lesson(2, "Физкультура", "Практика", "Б105"),
-        new Lesson(3, "Программирование", "Лабораторная", "425"),
-    };
-    List<Lesson> thursdayNotEven = new List<Lesson>()
-    {
-        new Lesson(2, "Основы Российской Государственности", "Практика", "ЧЗ"),
-        new Lesson(3, "Основы Российской Государственности", "Лекция", "ЧЗ"),
-        new Lesson(4, "Системный Анализ", "Практика", "Б303"),
-    };
-    List<Lesson> fridayNotEven = new List<Lesson>()
-    {
-        new Lesson(1, "Алгебра Геометрия", "Лекция", "51"),
-    };
 
-    // Чётная неделя
-    List<Lesson> mondayEven = new List<Lesson>()
-    {
-        new Lesson(2, "Математический Анализ", "Практика", "А314"),
-        new Lesson(3, "Дискретная математика", "Практика", "А230"),
-    };
-    List<Lesson> tuesdayEven = new List<Lesson>()
-    {
-        new Lesson(2, "Программирование", "Лекция", "302"),
-        new Lesson(3, "Матан", "Лекция", "Б402"),
-        new Lesson(4, "Алгем", "Практика", "А318"),
-    };
-    List<Lesson> wednesdayEven = new List<Lesson>()
-    {
-        new Lesson(1, "Программирование", "Лабораторная", "425"),
-        new Lesson(2, "Физкультура", "Практика", "Б105"),
-        new Lesson(3, "Программирование", "Лабораторная", "425"),
-    };
-    List<Lesson> thursdayEven = new List<Lesson>()
-    {
-        new Lesson(2, "Основы Российской Государственности", "Практика", "ЧЗ"),
-        new Lesson(3, "Основы Российской Государственности", "Лекция", "ЧЗ"),
-        new Lesson(4, "Дискретная математика", "Лекция", "51"),
-    };
-    List<Lesson> fridayEven = new List<Lesson>()
-    {
-        new Lesson(1, "Алгебра Геометрия", "Лекция", "51"),
-        new Lesson(2, "ТЛПР", "Практика", "А230"),
-    };
-
-    // Словарик для этой хрени. Боже, как же хорошо, что это временно и я потом сделаю SQL таблицу, а не эту простыню кода
-    Dictionary<(bool, DayOfWeek), List<Lesson>> schedule;
 
     public MainPage()
     {
 
         InitializeComponent();
 
-        // Временная херня, пока не сделана SQL таблица
-        schedule = new()
-        {
-            { (false, DayOfWeek.Monday), mondayNotEven },
-            { (false, DayOfWeek.Tuesday), tuesdayNotEven },
-            { (false, DayOfWeek.Wednesday), wednesdayNotEven },
-            { (false, DayOfWeek.Thursday), thursdayNotEven },
-            { (false, DayOfWeek.Friday), fridayNotEven },
+        // Инициализация БД
+        databaseService = new DatabaseService();
+        
 
-            { (true, DayOfWeek.Monday), mondayEven },
-            { (true, DayOfWeek.Tuesday), tuesdayEven },
-            { (true, DayOfWeek.Wednesday), wednesdayEven },
-            { (true, DayOfWeek.Thursday), thursdayEven },
-            { (true, DayOfWeek.Friday), fridayEven }
-        };
-
-
+        // Авевеве
+        groupSchedule = databaseService.GetGroupLessons(1);
 
         // Назначение сегодняшнего дня недели
         selectedDay = DateTime.Now.DayOfWeek;
@@ -156,16 +92,16 @@ public partial class MainPage : ContentPage
         }
         dateAndEven.Text = DateTime.Now.ToString("dd.MM.yyyy") + " " + evenNotEven;
 
-        // Заполнение расписания
-
-        if (schedule.ContainsKey((IsEvenWeek(), selectedDay)))
+        // Заполнение расписания (списка events)
+        foreach(var lesson in groupSchedule)
         {
-            foreach (var lesson in schedule[(IsEvenWeek(), selectedDay)])
+            if (lesson.isEvenWeek == IsEvenWeek() && lesson.weekDay == (int)selectedDay)
             {
                 events.Add(new Event(lesson.eventNumber, eventTimes[lesson.eventNumber].start, eventTimes[lesson.eventNumber].end, lesson.eventName, lesson.eventType, lesson.eventRoom));
             }
         }
 
+        // обнуляет и снова назначает источник данных для ScheduleCollectionView, чтобы обновить отображение
         ScheduleCollectionView.ItemsSource = null;
         ScheduleCollectionView.ItemsSource = events;
 
